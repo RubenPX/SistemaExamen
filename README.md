@@ -17,7 +17,7 @@ El sistema ha sido concebido para procesar de manera confiable las acciones de h
 El proyecto basa su arquitectura en una estructura dividida en 3 fases independientes, cada una diseñada para gestionar un paso específico en el flujo de datos.
 
 ### Fase 1: Absorción (El Escudo Frontal)
-- **Tecnología principal:** .NET 8 y SignalR para la comunicación en tiempo real con el cliente (alumnos).
+- **Tecnología principal:** .NET 10 y SignalR para la comunicación en tiempo real con el cliente (alumnos).
 - **Gestión de eventos:** Usa `System.Threading.Channels` con un canal acotado a 100,000 eventos.
 - **Optimización del rendimiento:**
   - Uso de `JsonSerializerContext` con *Source Generators* para reducir la carga de CPU en un 40%.
