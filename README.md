@@ -76,3 +76,8 @@ Este sistema divide las tareas en pasos bien definidos, garantizando que cada co
 5. **OpenTelemetry:** Monitorización centralizada, métricas y diágnosticos para la arquitectura.
 
 En general, "SistemaExamen" representa un esfuerzo de ingeniería para abordar desafíos específicos en la manejo masivo de datos, con una combinación de tecnologías modernas y patrones arquitectónicos probados. Su diseño modular basado en las tres fases lo hace eficiente y escalable, cumpliendo con las estrictas demandas de baja latencia, monitoreo y gestión de datos en entornos educativos.
+
+> [!warning]
+> Debido a limitaciones que desconozco, solo he podido realizar pruebas con un maximo de 4000 conexiones a la vez
+
+
