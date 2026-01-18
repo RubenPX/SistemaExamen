@@ -1,10 +1,10 @@
+using System.Text.Json.Serialization;
+using System.Threading.Channels;
 using Examenes.Domain;
 using Examenes.Server.BackgroundServices;
 using Examenes.Server.Exporters;
 using Examenes.Server.Monitoring;
 using Microsoft.AspNetCore.SignalR;
-using System.Text.Json.Serialization;
-using System.Threading.Channels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,8 +49,7 @@ app.Run();
 
 // --- 4. CLASES DE LÓGICA ---
 
-public class ExamenHub : Hub
-{
+public class ExamenHub : Hub {
     private readonly ChannelWriter<AccionEvento> _writer;
     public ExamenHub(ChannelWriter<AccionEvento> w) => _writer = w;
     public async Task RegistrarAccion(AccionEvento e) => await _writer.WriteAsync(e);

@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.SignalR.Client;
-using Examenes.Domain;
 using System.Diagnostics;
+using Examenes.Domain;
+using Microsoft.AspNetCore.SignalR.Client;
 
 Console.WriteLine("Iniciando Simulador Masivo...");
 var sw = Stopwatch.StartNew();
@@ -16,7 +16,7 @@ for (int i = 1; i <= 500; i++) {
         .WithUrl($"{serverUrl}/examenHub")
         .WithAutomaticReconnect()
         .Build();
-    
+
     await conn.StartAsync();
     alumnos.Add(conn);
     if (i % 200 == 0) Console.WriteLine($"[Simulador] {i} alumnos conectados...");
@@ -26,8 +26,7 @@ Console.WriteLine($"[Simulador] Conexión completada en {sw.Elapsed.TotalSeconds
 
 // 2. Hilo de monitoreo (Velocímetro)
 _ = Task.Run(async () => {
-    while (true)
-    {
+    while (true) {
         long antes = Interlocked.Read(ref accionesEnviadas);
         await Task.Delay(1000);
         long ahora = Interlocked.Read(ref accionesEnviadas);
@@ -43,22 +42,18 @@ _ = Task.Run(async () => {
 var tasks = alumnos.Select(async (conn, index) => {
     var rnd = new Random();
     int alumnoId = index + 1;
-    while (true)
-    {
+    while (true) {
         await Task.Delay(rnd.Next(10, 50));
         var ev = new AccionEvento(Guid.NewGuid(), alumnoId, 1, TipoAccion.MarcaPregunta, rnd.Next(1, 50), "A", DateTime.UtcNow);
 
-        try
-        {
+        try {
             await conn.InvokeAsync("RegistrarAccion", ev);
             // INCREMENTO DEL CONTADOR
             Interlocked.Increment(ref accionesEnviadas);
 
             long contador = Interlocked.Read(ref accionesEnviadas);
             if (contador > 500_000) break;
-        }
-        catch
-        {
+        } catch {
             // Opcional: Contador de errores
         }
     }
