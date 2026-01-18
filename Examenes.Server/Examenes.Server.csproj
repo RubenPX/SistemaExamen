@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Oracle.EntityFrameworkCore" Version="13.1.0" />
+    <PackageReference Include="Aspire.StackExchange.Redis" Version="13.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <!--<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.9" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Examenes.Shared\Examenes.Shared.csproj" />
+    <ProjectReference Include="..\SistemaExamen.ServiceDefaults\SistemaExamen.ServiceDefaults.csproj" />
+  </ItemGroup>
+
+</Project>
