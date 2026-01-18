@@ -21,7 +21,7 @@ public class RedisIngestionWorker : BackgroundService {
         while (!ct.IsCancellationRequested) {
             // Intentamos leer todo lo que haya en el canal en este momento
             while (_reader.TryRead(out var e)) {
-                buffer.Add(JsonSerializer.Serialize(e));
+                buffer.Add(JsonSerializer.Serialize(e, SourceGenerationContext.Default.AccionEvento));
                 if (buffer.Count >= 2000) break;
             }
 

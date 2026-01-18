@@ -56,6 +56,6 @@ public class ExamenHub : Hub {
 }
 
 // Serialización Optimizada (Source Generator para 1 Core CPU)
-[JsonSourceGenerationOptions(WriteIndented = false)]
+[JsonSourceGenerationOptions(WriteIndented = true)]
 [JsonSerializable(typeof(AccionEvento))]
-internal partial class AppJsonContext : JsonSerializerContext { }
+internal partial class SourceGenerationContext : JsonSerializerContext { }

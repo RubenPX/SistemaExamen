@@ -60,7 +60,7 @@ public class OracleExporterService {
                 if (items != null) {
                     lote = items
                         .AsParallel()
-                        .Select(item => JsonSerializer.Deserialize<AccionEvento>((string)item!)!)
+                        .Select(item => JsonSerializer.Deserialize<AccionEvento>((string)item!, SourceGenerationContext.Default.AccionEvento)!)
                         .ToList();
                 }
 
