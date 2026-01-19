@@ -5,34 +5,36 @@ using StackExchange.Redis;
 
 namespace Examenes.Server.BackgroundServices;
 
-public class RedisIngestionWorker : BackgroundService {
-    private readonly ChannelReader<AccionEvento> _reader;
-    private readonly IDatabase _db;
-
-    public RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMultiplexer c) {
-        _reader = r;
-        _db = c.GetDatabase();
-    }
-    public IDatabase GetDatabase() => _db;
+public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMultiplexer c) : BackgroundService {
+    private readonly ChannelReader<AccionEvento> _reader = r;
+    private readonly IDatabase _db = c.GetDatabase();
 
     protected override async Task ExecuteAsync(CancellationToken ct) {
-        var buffer = new List<RedisValue>();
+        const int MaxBatchSize = 5000;
+        var buffer = new RedisValue[MaxBatchSize];
+        int count = 0;
 
-        while (!ct.IsCancellationRequested) {
-            // Intentamos leer todo lo que haya en el canal en este momento
-            while (_reader.TryRead(out var e)) {
-                buffer.Add(JsonSerializer.Serialize(e, SourceGenerationContext.Default.AccionEvento));
-                if (buffer.Count >= 2000) break;
-            }
+        try {
+            while (await _reader.WaitToReadAsync(ct)) {
+                while (count < MaxBatchSize && _reader.TryRead(out var e)) {
+                    buffer[count++] = JsonSerializer.Serialize(e, SourceGenerationContext.Default.AccionEvento);
+                }
 
-            if (buffer.Count > 0) {
-                // Usamos Push masivo: Un solo comando para 100 registros
-                await _db.ListLeftPushAsync("cola:examen", buffer.ToArray());
-                buffer.Clear();
-            } else {
-                // Si el canal está vacío, esperamos un poco para no quemar CPU
-                await _reader.WaitToReadAsync(ct);
+                if (count > 0) {
+                    var batchToSend = new RedisValue[count];
+                    Array.Copy(buffer, batchToSend, count);
+                    _ = EnviarARedis(batchToSend);
+                    count = 0;
+                }
             }
+        } catch (OperationCanceledException) { /* Manejo normal al cerrar */ }
+    }
+
+    private async Task EnviarARedis(RedisValue[] batch) {
+        try {
+            await _db.ListLeftPushAsync("cola:examen", batch);
+        } catch (Exception ex) {
+            Console.WriteLine($"Error en Redis: {ex.Message}");
         }
     }
 }
