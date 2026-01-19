@@ -49,13 +49,11 @@ app.Run();
 
 // --- 4. CLASES DE LÓGICA ---
 
-public class ExamenHub : Hub {
-    private readonly ChannelWriter<AccionEvento> _writer;
-    public ExamenHub(ChannelWriter<AccionEvento> w) => _writer = w;
-    public async Task RegistrarAccion(AccionEvento e) => await _writer.WriteAsync(e);
+public class ExamenHub(ChannelWriter<AccionEvento> writer) : Hub {
+    public async Task RegistrarAccion(AccionEvento e) => await writer.WriteAsync(e);
 }
 
 // Serialización Optimizada (Source Generator para 1 Core CPU)
-[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSourceGenerationOptions(WriteIndented = false)]
 [JsonSerializable(typeof(AccionEvento))]
 internal partial class SourceGenerationContext : JsonSerializerContext { }
