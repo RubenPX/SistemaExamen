@@ -2,66 +2,82 @@ using System.Diagnostics;
 using Examenes.Domain;
 using Microsoft.AspNetCore.SignalR.Client;
 
-Console.WriteLine("Iniciando Simulador Masivo...");
+Console.WriteLine("--- MODO BERSERKER ACTIVADO ---");
 var sw = Stopwatch.StartNew();
-long accionesEnviadas = 0;
 
-string? serverUrl = Environment.GetEnvironmentVariable("services__server__http__0");
-Console.WriteLine($"URL Conection: {serverUrl}/examenHub");
-
-// Conectamos 5000 alumnos en grupos de 100 para no saturar el handshake
+// 1. Conexión Masiva en Paralelo
+int totalObjetivo = 3000; // No se puede poner mas por una limitación de windows
+int conectados = 0;
+int fallidos = 0;
 var alumnos = new List<HubConnection>();
-for (int i = 1; i <= 500; i++) {
+
+// Monitor de progreso de conexiones (Hilo separado)
+var cts = new CancellationTokenSource();
+_ = Task.Run(async () => {
+    while (!cts.Token.IsCancellationRequested) {
+        Console.WriteLine($"[CONECTANDO] Exitos: {conectados} | Fallidos: {fallidos} | Progreso: {(conectados + fallidos) * 100 / totalObjetivo}%");
+        await Task.Delay(500); // Actualiza cada medio segundo
+    }
+}, cts.Token);
+
+string? serverUrl = Environment.GetEnvironmentVariable("services__server__http__0") ?? "http://localhost:5000";
+
+await Parallel.ForEachAsync(Enumerable.Range(1, totalObjetivo), new ParallelOptions { MaxDegreeOfParallelism = 100 }, async (i, _) => {
     var conn = new HubConnectionBuilder()
         .WithUrl($"{serverUrl}/examenHub")
         .WithAutomaticReconnect()
         .Build();
 
-    await conn.StartAsync();
-    alumnos.Add(conn);
-    if (i % 200 == 0) Console.WriteLine($"[Simulador] {i} alumnos conectados...");
-}
+    try {
+        await conn.StartAsync();
+        Interlocked.Increment(ref conectados);
+        lock (alumnos) alumnos.Add(conn);
+    } catch(Exception ex) {
+        Interlocked.Increment(ref fallidos);
+        Console.WriteLine(ex.ToString());
+    }
+});
+sw.Stop();
+cts.Cancel(); // Detenemos el monitor de conexiones
 
-Console.WriteLine($"[Simulador] Conexión completada en {sw.Elapsed.TotalSeconds}s. Iniciando ráfaga.");
+Console.WriteLine($"[Simulador] {alumnos.Count} conectados en {sw.Elapsed.TotalSeconds} segundos. Errores: {fallidos}. Tiempo: {sw.Elapsed.TotalSeconds}s");
+if (fallidos > 0) return;
 
-// 2. Hilo de monitoreo (Velocímetro)
+long accionesEnviadas = 0;
+long errores = 0;
+
+// 2. Velocímetro (sin cambios, es vital para ver el caos)
 _ = Task.Run(async () => {
     while (true) {
         long antes = Interlocked.Read(ref accionesEnviadas);
         await Task.Delay(1000);
         long ahora = Interlocked.Read(ref accionesEnviadas);
-
-        long diff = ahora - antes;
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"[SIMULADOR] Velocidad: {diff} acciones/seg | Total: {ahora}");
-        Console.ResetColor();
+        Console.WriteLine($"[STRESS] {ahora - antes} req/s | Total: {ahora} | Errores: {Interlocked.Read(ref errores)}");
     }
 });
 
-// 3. Lógica de envío masivo
-var tasks = alumnos.Select(async (conn, index) => {
+sw = Stopwatch.StartNew();
+// 3. Envío Agresivo de eventos
+var tareasDeAtaque = alumnos.Select(conn => Task.Run(async () => {
     var rnd = new Random();
-    int alumnoId = index + 1;
-    while (true) {
-        await Task.Delay(rnd.Next(10, 50));
-        var ev = new AccionEvento(Guid.NewGuid(), alumnoId, 1, TipoAccion.MarcaPregunta, rnd.Next(1, 50), "A", DateTime.UtcNow);
+
+    while (Interlocked.Read(ref accionesEnviadas) < 1_000_000) { // Límite de 1M de acciones
+        var ev = new AccionEvento(Guid.NewGuid(), rnd.Next(1, 10000), 1, TipoAccion.MarcaPregunta, rnd.Next(1, 50), "A", DateTime.UtcNow);
 
         try {
-            await conn.InvokeAsync("RegistrarAccion", ev);
-            // INCREMENTO DEL CONTADOR
+            // SendAsync no espera respuesta del servidor, solo pone el mensaje en el pipe
+            await conn.SendAsync("RegistrarAccion", ev);
             Interlocked.Increment(ref accionesEnviadas);
 
-            long contador = Interlocked.Read(ref accionesEnviadas);
-            if (contador > 500_000) break;
+            // Si quieres máxima agresividad, quita este Delay
+            await Task.Delay(1);
         } catch {
-            // Opcional: Contador de errores
+            Interlocked.Increment(ref errores);
         }
     }
-});
+}));
 
-var swe = System.Diagnostics.Stopwatch.StartNew();
-await Task.WhenAll(tasks);
-swe.Stop();
+await Task.WhenAll(tareasDeAtaque);
 
-long contador = Interlocked.Read(ref accionesEnviadas);
-Console.WriteLine($"[Simulador] Se han enviado {contador} eventos en {swe.Elapsed.TotalSeconds} segundos");
+sw.Stop();
+Console.WriteLine($"Prueba finalizada en {sw.Elapsed.TotalSeconds} segundos | Acciones enviadas: {accionesEnviadas}, fallidas: {errores}");

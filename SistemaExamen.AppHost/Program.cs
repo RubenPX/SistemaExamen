@@ -16,14 +16,13 @@ var oracle = builder.AddOracle("oracle")
 var server = builder.AddProject<Projects.Examenes_Server>("server")
     .WaitFor(redis).WithReference(redis)
     .WaitFor(oracle).WithReference(oracle)
-    .WithHttpCommand("/api/finalizarexamen", "Guardar datos en oracle", commandOptions: new() {
+    .WithHttpCommand("/api/finalizarexamen", "Migrar datos a oracle", commandOptions: new() {
         Method = HttpMethod.Get,
         ConfirmationMessage = "Quieres que se inicie la exportación?",
     });
 
 builder.AddProject<Projects.Examenes_Simulator>("simulator")
     .WithReference(server)
-    .WithExplicitStart()
-    .WithReplicas(4);
+    .WithExplicitStart();
 
 builder.Build().Run();
