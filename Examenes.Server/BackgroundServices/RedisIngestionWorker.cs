@@ -10,7 +10,7 @@ public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMult
     private readonly IDatabase _db = c.GetDatabase();
 
     protected override async Task ExecuteAsync(CancellationToken ct) {
-        const int MaxBatchSize = 5000;
+        const int MaxBatchSize = 10000;
         var buffer = new RedisValue[MaxBatchSize];
         int count = 0;
 
