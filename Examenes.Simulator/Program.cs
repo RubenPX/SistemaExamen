@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Examenes.Domain;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -69,19 +70,28 @@ _ = Task.Run(async () => {
 // 3. Envío Agresivo de eventos
 sw = Stopwatch.StartNew();
 var tareasDeAtaque = alumnos.Select(conn => Task.Run(async () => {
-    var rnd = new Random();
-
-    while (Interlocked.Read(ref accionesEnviadas) < 1_000_000) { // Límite de 1M de acciones
-        var ev = new AccionEvento(Guid.NewGuid(), rnd.Next(1, 10000), 1, TipoAccion.MarcaPregunta, rnd.Next(1, 50), "A", DateTime.UtcNow);
+    while (Interlocked.Read(ref accionesEnviadas) < eventosMaximos) { // Límite de 1M de acciones
+        var ev = new AccionEvento(Guid.NewGuid(), Random.Shared.Next(1, 10000), 1, TipoAccion.MarcaPregunta, Random.Shared.Next(1, 50), "A", DateTime.UtcNow);
 
         try {
             // SendAsync no espera respuesta del servidor, solo pone el mensaje en el pipe
             await conn.SendAsync("RegistrarAccion", ev);
             Interlocked.Increment(ref accionesEnviadas);
 
-            // Si quieres máxima agresividad, quita este Delay
-            await Task.Delay(1);
-        } catch {
+            // En lugar de Delay(1), deja que la tarea respire cada 10 mensajes para no bloquear el ThreadPool por completo.
+            /**
+             * diferencia de Task.Delay(1), que le dice al procesador "duerme por X milisegundos", Task.Yield() 
+             * le dice: "He terminado mi turno por ahora, si hay alguien más esperando, adelante. Si no, 
+             * vuelvo enseguida".
+             * 
+             * Al usar % 10, le estás diciendo al programa: "Ejecuta 9 envíos a toda velocidad (síncronamente),
+             * y en el envío número 10, haz una pausa estratégica".
+             */
+            if (accionesEnviadas % 10 == 0) {
+                await Task.Yield();
+            }
+        } catch (Exception ex) {
+            Console.WriteLine(ex.Message);
             Interlocked.Increment(ref errores);
         }
     }
