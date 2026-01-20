@@ -48,10 +48,15 @@ cts.Cancel(); // Detenemos el monitor de conexiones
 Console.WriteLine($"[Simulador] {alumnos.Count} conectados en {sw.Elapsed.TotalSeconds} segundos. Errores: {fallidos}. Tiempo: {sw.Elapsed.TotalSeconds}s");
 if (fallidos > 0) return;
 
+int eventosMaximos = 1_000_000;
 long accionesEnviadas = 0;
 long errores = 0;
 
-// 2. Velocímetro (sin cambios, es vital para ver el caos)
+if (int.TryParse(Environment.GetEnvironmentVariable("MAX_EVENTS"), out int maxEvents)) {
+    eventosMaximos = maxEvents; // Establece el maximo en base a la variable de entorno
+}
+
+// 2. Velocímetro (Vital para ver el caos)
 _ = Task.Run(async () => {
     while (true) {
         long antes = Interlocked.Read(ref accionesEnviadas);
@@ -61,8 +66,8 @@ _ = Task.Run(async () => {
     }
 });
 
-sw = Stopwatch.StartNew();
 // 3. Envío Agresivo de eventos
+sw = Stopwatch.StartNew();
 var tareasDeAtaque = alumnos.Select(conn => Task.Run(async () => {
     var rnd = new Random();
 
