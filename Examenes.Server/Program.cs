@@ -10,12 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. CONFIGURACIÓN DE ASPIRE Y SERVICIOS ---
 builder.AddServiceDefaults();
-builder.AddRedisClient("redis");
+builder.AddRedisClient("redis", cfg => {
+    cfg.DisableTracing = true;
+});
 
 builder.Services.AddSignalR();
 
 // Canal para procesar la llegada y meter a Redis rápidamente
-var eventoChannel = Channel.CreateBounded<AccionEvento>(new BoundedChannelOptions(100000) {
+var eventoChannel = Channel.CreateBounded<AccionEvento>(new BoundedChannelOptions(1_000_000) {
     FullMode = BoundedChannelFullMode.Wait
 });
 builder.Services.AddSingleton(eventoChannel.Writer);
