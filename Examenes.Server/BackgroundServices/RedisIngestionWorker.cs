@@ -21,6 +21,7 @@ public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMult
                 }
 
                 if (count > 0) {
+                    // Envia los datos a redis en otro hilo
                     var batchToSend = new RedisValue[count];
                     Array.Copy(buffer, batchToSend, count);
                     _ = EnviarARedis(batchToSend);
@@ -31,10 +32,15 @@ public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMult
     }
 
     private async Task EnviarARedis(RedisValue[] batch) {
-        try {
-            await _db.ListLeftPushAsync("cola:examen", batch);
-        } catch (Exception ex) {
-            Console.WriteLine($"Error en Redis: {ex.Message}");
+        while (true) {
+            try {
+                await _db.ListLeftPushAsync("cola:examen", batch);
+                break;
+            } catch (Exception ex) {
+                Console.WriteLine($"Error en Redis: {ex.Message}");
+            }
+            Console.WriteLine("Reintentando en 5 segundos");
+            await Task.Delay(5000);
         }
     }
 }
