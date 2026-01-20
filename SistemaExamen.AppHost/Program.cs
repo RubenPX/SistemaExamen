@@ -9,7 +9,8 @@ var oracle = builder.AddOracle("oracle")
 // Cache Redis
 var redis = builder.AddRedis("redis")
                 .WithDataVolume()
-                .WithPersistence(TimeSpan.FromSeconds(1)); // Activa RDB/AOF
+                .WithPersistence(TimeSpan.FromSeconds(1))  // Activa RDB/AOF
+                .WithLifetime(ContainerLifetime.Persistent);
 
 builder.AddContainer("redis-insight", "redislabs/redisinsight")
        .WithHttpEndpoint(port: 5540, targetPort: 5540)
@@ -27,7 +28,7 @@ var server = builder.AddProject<Projects.Examenes_Server>("server")
 
 // Simulador
 builder.AddProject<Projects.Examenes_Simulator>("simulator")
-    .WithEnvironment("MAX_CONNECTIONS", "500")
+    .WithEnvironment("MAX_CONNECTIONS", "2000")
     .WithEnvironment("MAX_EVENTS", "5_000_000")
     .WithReference(server)
     .WithExplicitStart();
