@@ -10,7 +10,7 @@ public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMult
     private readonly IDatabase _db = c.GetDatabase();
 
     protected override async Task ExecuteAsync(CancellationToken ct) {
-        const int MaxBatchSize = 10000; // Buffer para extraer de channel
+        const int MaxBatchSize = 100_000; // Buffer para extraer de channel
         var buffer = new RedisValue[MaxBatchSize];
         int count = 0;
 
@@ -24,7 +24,7 @@ public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMult
                     // Envia los datos a redis en otro hilo
                     var batchToSend = new RedisValue[count];
                     Array.Copy(buffer, batchToSend, count);
-                    _ = EnviarARedis(batchToSend);
+                    await EnviarARedis(batchToSend);
                     count = 0;
                 }
             }

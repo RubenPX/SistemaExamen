@@ -28,7 +28,7 @@ var server = builder.AddProject<Projects.Examenes_Server>("server")
 // Simulador
 builder.AddProject<Projects.Examenes_Simulator>("simulator")
     .WithEnvironment("MAX_CONNECTIONS", "500")
-    .WithEnvironment("MAX_EVENTS", "1_000_000")
+    .WithEnvironment("MAX_EVENTS", "5_000_000")
     .WithReference(server)
     .WithExplicitStart();
 
