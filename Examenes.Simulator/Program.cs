@@ -6,23 +6,29 @@ Console.WriteLine("--- MODO BERSERKER ACTIVADO ---");
 var sw = Stopwatch.StartNew();
 
 // 1. Conexión Masiva en Paralelo
-int totalObjetivo = 3000; // No se puede poner mas por una limitación de windows
+int cantidadConexionesObjetivo = 100;
+
+if (int.TryParse(Environment.GetEnvironmentVariable("MAX_CONNECTIONS"), out int maxConex)) {
+    cantidadConexionesObjetivo = maxConex; // Establece el maximo en base a la variable de entorno
+}
+
 int conectados = 0;
 int fallidos = 0;
-var alumnos = new List<HubConnection>();
+var alumnos = new ConcurrentBag<HubConnection>();
 
 // Monitor de progreso de conexiones (Hilo separado)
 var cts = new CancellationTokenSource();
 _ = Task.Run(async () => {
     while (!cts.Token.IsCancellationRequested) {
-        Console.WriteLine($"[CONECTANDO] Exitos: {conectados} | Fallidos: {fallidos} | Progreso: {(conectados + fallidos) * 100 / totalObjetivo}%");
+        Console.WriteLine($"[CONECTANDO] Exitos: {conectados} | Fallidos: {fallidos} | Progreso: {(conectados + fallidos) * 100 / cantidadConexionesObjetivo}%");
         await Task.Delay(500); // Actualiza cada medio segundo
     }
 }, cts.Token);
 
+// Servidor al que se atacara
 string? serverUrl = Environment.GetEnvironmentVariable("services__server__http__0") ?? "http://localhost:5000";
 
-await Parallel.ForEachAsync(Enumerable.Range(1, totalObjetivo), new ParallelOptions { MaxDegreeOfParallelism = 100 }, async (i, _) => {
+await Parallel.ForEachAsync(Enumerable.Range(1, cantidadConexionesObjetivo), new ParallelOptions { MaxDegreeOfParallelism = 100 }, async (_, _) => {
     var conn = new HubConnectionBuilder()
         .WithUrl($"{serverUrl}/examenHub")
         .WithAutomaticReconnect()
@@ -31,10 +37,9 @@ await Parallel.ForEachAsync(Enumerable.Range(1, totalObjetivo), new ParallelOpti
     try {
         await conn.StartAsync();
         Interlocked.Increment(ref conectados);
-        lock (alumnos) alumnos.Add(conn);
-    } catch(Exception ex) {
+        alumnos.Add(conn);
+    } catch {
         Interlocked.Increment(ref fallidos);
-        Console.WriteLine(ex.ToString());
     }
 });
 sw.Stop();
