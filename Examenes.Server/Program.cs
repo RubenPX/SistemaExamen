@@ -53,7 +53,7 @@ public class ExamenHub(ChannelWriter<AccionEvento> writer) : Hub {
     public async Task RegistrarAccion(AccionEvento e) => await writer.WriteAsync(e);
 }
 
-// Serialización Optimizada (Source Generator para 1 Core CPU)
+// Serialización Optimizada (Source Generator)
 [JsonSourceGenerationOptions(WriteIndented = false)]
 [JsonSerializable(typeof(AccionEvento))]
 internal partial class SourceGenerationContext : JsonSerializerContext { }
