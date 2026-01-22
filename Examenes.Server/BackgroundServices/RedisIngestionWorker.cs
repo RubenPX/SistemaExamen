@@ -5,18 +5,31 @@ using StackExchange.Redis;
 
 namespace Examenes.Server.BackgroundServices;
 
-public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMultiplexer c) : BackgroundService {
-    private readonly ChannelReader<AccionEvento> _reader = r;
+public class RedisIngestionWorker(
+    ChannelReader<AccionEvento> signalr_reader,
+    ChannelWriter<RedisValue[]> redis_writter,
+    ChannelReader<RedisValue[]> redis_reader,
+    IConnectionMultiplexer c
+) : BackgroundService {
     private readonly IDatabase _db = c.GetDatabase();
 
     protected override async Task ExecuteAsync(CancellationToken ct) {
+        await Task.WhenAll([
+            EmpaquetadorWorker(ct),
+            RedisSenderWorker(ct),
+            RedisSenderWorker(ct)
+        ]);
+    }
+
+    private async Task EmpaquetadorWorker(CancellationToken ct) {
         const int MaxBatchSize = 10_000; // Buffer para extraer de channel
         var buffer = new RedisValue[MaxBatchSize];
         int count = 0;
 
+        // Empaquetamos los datos en packs de 10.000
         try {
-            while (await _reader.WaitToReadAsync(ct)) {
-                while (count < MaxBatchSize && _reader.TryRead(out var e)) {
+            while (await signalr_reader.WaitToReadAsync(ct)) {
+                while (count < MaxBatchSize && signalr_reader.TryRead(out var e)) {
                     buffer[count++] = JsonSerializer.Serialize(e, SourceGenerationContext.Default.AccionEvento);
                 }
 
@@ -24,23 +37,18 @@ public class RedisIngestionWorker(ChannelReader<AccionEvento> r, IConnectionMult
                     // Envia los datos a redis en otro hilo
                     var batchToSend = new RedisValue[count];
                     Array.Copy(buffer, batchToSend, count);
-                    await EnviarARedis(batchToSend);
+                    await redis_writter.WriteAsync(batchToSend);
                     count = 0;
                 }
             }
         } catch (OperationCanceledException) { /* Manejo normal al cerrar */ }
     }
 
-    private async Task EnviarARedis(RedisValue[] batch) {
-        while (true) {
-            try {
-                await _db.ListLeftPushAsync("cola:examen", batch);
-                break;
-            } catch (Exception ex) {
-                Console.WriteLine($"Error en Redis: {ex.Message}");
+    private async Task RedisSenderWorker(CancellationToken ct) {
+        while (await redis_reader.WaitToReadAsync(ct)) {
+            while (redis_reader.TryRead(out var e)) {
+                await _db.ListLeftPushAsync("cola:examen", e);
             }
-            Console.WriteLine("Reintentando en 5 segundos");
-            await Task.Delay(5000);
         }
     }
 }

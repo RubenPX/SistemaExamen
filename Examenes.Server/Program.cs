@@ -3,29 +3,25 @@ using System.Threading.Channels;
 using Examenes.Domain;
 using Examenes.Server.BackgroundServices;
 using Examenes.Server.Exporters;
-using Examenes.Server.Monitoring;
 using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- 1. CONFIGURACIÓN DE ASPIRE Y SERVICIOS ---
 builder.AddServiceDefaults();
-builder.AddRedisClient("redis", cfg => {
-    cfg.DisableTracing = true;
-});
+builder.AddRedisClient("redis", cfg => cfg.DisableTracing = true);
 
 builder.Services.AddSignalR();
 
-// Canal para procesar la llegada y meter a Redis rápidamente
-var eventoChannel = Channel.CreateBounded<AccionEvento>(new BoundedChannelOptions(1_000_000) {
-    FullMode = BoundedChannelFullMode.Wait
-});
-builder.Services.AddSingleton(eventoChannel.Writer);
-builder.Services.AddSingleton(eventoChannel.Reader);
+// Canales de trabajo
+builder.Services.AddSingleton(ChannelManager.channelSIGANLR.Writer);
+builder.Services.AddSingleton(ChannelManager.channelSIGANLR.Reader);
+builder.Services.AddSingleton(ChannelManager.channelREDIS.Writer);
+builder.Services.AddSingleton(ChannelManager.channelREDIS.Reader);
 
 // Worker que mueve datos del Canal a Redis
 builder.Services.AddHostedService<RedisIngestionWorker>();
-builder.Services.AddHostedService<ChannelMonitorWorker>();
+builder.Services.AddHostedService<ChannelMonitor>();
 
 // Worker que maneja Oracle
 builder.Services.AddSingleton<OracleExporterService>();
@@ -48,8 +44,8 @@ app.Run();
 
 // --- 4. CLASES DE LÓGICA ---
 
-public class ExamenHub(ChannelWriter<AccionEvento> writer) : Hub {
-    public async Task RegistrarAccion(AccionEvento e) => await writer.WriteAsync(e);
+public class ExamenHub(ChannelWriter<AccionEvento> rw) : Hub {
+    public async Task RegistrarAccion(AccionEvento e) => await rw.WriteAsync(e);
 }
 
 // Serialización Optimizada (Source Generator)
