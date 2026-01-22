@@ -23,8 +23,6 @@ var eventoChannel = Channel.CreateBounded<AccionEvento>(new BoundedChannelOption
 builder.Services.AddSingleton(eventoChannel.Writer);
 builder.Services.AddSingleton(eventoChannel.Reader);
 
-builder.Services.AddSingleton<MonitorControl>();
-
 // Worker que mueve datos del Canal a Redis
 builder.Services.AddHostedService<RedisIngestionWorker>();
 builder.Services.AddHostedService<ChannelMonitorWorker>();
@@ -41,8 +39,7 @@ app.MapDefaultEndpoints();
 app.MapHub<ExamenHub>("/examenHub");
 
 // Endpoint de exportación con porcentaje
-app.MapGet("/api/finalizarexamen", async (OracleExporterService exporter, MonitorControl c) => {
-    c.Activo = false;
+app.MapGet("/api/finalizarexamen", async (OracleExporterService exporter) => {
     await exporter.ExportarDeRedisAOracleAsync();
     return Results.Ok("Proceso de exportación iniciado. Revisa la consola para ver el progreso.");
 });
