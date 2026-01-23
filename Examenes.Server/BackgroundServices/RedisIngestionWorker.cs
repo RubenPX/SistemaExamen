@@ -39,7 +39,7 @@ public class RedisIngestionWorker(
                     var batchToSend = new RedisValue[count];
                     Array.Copy(buffer, batchToSend, count);
                     // await redis_writter.WriteAsync(batchToSend);
-                    await _db.ListLeftPushAsync("cola:examen", batchToSend);
+                    await _db.ListLeftPushAsync("cola:examen", batchToSend, flags: CommandFlags.FireAndForget);
                     count = 0;
                 }
             }

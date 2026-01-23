@@ -13,10 +13,12 @@ namespace Examenes.Server.BackgroundServices {
         }
 
         protected async Task Monitor<T>(ChannelReader<T> _reader, int capacity, string context, CancellationToken ct) {
+            int last = -1;
             while (!ct.IsCancellationRequested) {
                 int actual = _reader.Count;
                 double porcentaje = (double)actual / capacity * 100;
-                if (actual > 0) {
+                if (last != actual) {
+                    last = actual;
                     Console.WriteLine($"[CANAL {context}] Uso: {porcentaje:000}% ({actual}/{capacity})");
                 }
                 await Task.Delay(250, ct);
