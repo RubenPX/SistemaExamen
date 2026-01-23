@@ -8,7 +8,7 @@ namespace Examenes.Server.BackgroundServices {
         protected override Task ExecuteAsync(CancellationToken ct) {
             return Task.WhenAll([
                 Monitor(signalrReader, ChannelManager.MAX_SIGANLR_SIZE, "SIGNALR", ct),
-                //Monitor(redisReader, ChannelManager.MAX_REDIS_SIZE, " REDIS ", ct) // Este estara siempre al 100%
+                Monitor(redisReader, ChannelManager.MAX_REDIS_SIZE, " REDIS ", ct) // Este estara siempre al 100%
             ]);
         }
 
