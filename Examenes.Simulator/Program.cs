@@ -15,7 +15,7 @@ if (int.TryParse(Environment.GetEnvironmentVariable("MAX_CONNECTIONS"), out int 
 }
 
 if (int.TryParse(Environment.GetEnvironmentVariable("AGRESIVIDAD"), out int gravity)) {
-    agresividad = gravity; // Establece el maximo en base a la variable de entorno
+    agresividad = gravity; // Establece el nivel de agresividad de elementos por segundo
 }
 
 int conectados = 0;
