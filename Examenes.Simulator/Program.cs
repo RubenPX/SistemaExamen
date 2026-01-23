@@ -8,9 +8,14 @@ var sw = Stopwatch.StartNew();
 
 // 1. Conexión Masiva en Paralelo
 int cantidadConexionesObjetivo = 100;
+int agresividad = 1;
 
 if (int.TryParse(Environment.GetEnvironmentVariable("MAX_CONNECTIONS"), out int maxConex)) {
     cantidadConexionesObjetivo = maxConex; // Establece el maximo en base a la variable de entorno
+}
+
+if (int.TryParse(Environment.GetEnvironmentVariable("AGRESIVIDAD"), out int gravity)) {
+    agresividad = gravity; // Establece el maximo en base a la variable de entorno
 }
 
 int conectados = 0;
@@ -80,7 +85,7 @@ var tareasAtaque = alumnos.Select(async conn => {
         try {
             await conn.SendAsync("RegistrarAccion", ev);
             Interlocked.Increment(ref accionesEnviadas);
-            if (accionesEnviadas % 5 == 0) await Task.Delay(1);
+            if (accionesEnviadas % agresividad == 0) await Task.Delay(1);
         } catch {
             Interlocked.Increment(ref errores);
             break;
