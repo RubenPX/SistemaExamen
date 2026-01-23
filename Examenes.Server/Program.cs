@@ -16,8 +16,6 @@ builder.Services.AddSignalR();
 // Canales de trabajo
 builder.Services.AddSingleton(ChannelManager.channelSIGANLR.Writer);
 builder.Services.AddSingleton(ChannelManager.channelSIGANLR.Reader);
-builder.Services.AddSingleton(ChannelManager.channelREDIS.Writer);
-builder.Services.AddSingleton(ChannelManager.channelREDIS.Reader);
 
 // Worker que mueve datos del Canal a Redis
 builder.Services.AddHostedService<RedisIngestionWorker>();

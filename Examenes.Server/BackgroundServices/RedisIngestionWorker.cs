@@ -7,8 +7,6 @@ namespace Examenes.Server.BackgroundServices;
 
 public class RedisIngestionWorker(
     ChannelReader<AccionEvento> signalr_reader,
-    ChannelWriter<RedisValue[]> redis_writter,
-    ChannelReader<RedisValue[]> redis_reader,
     IConnectionMultiplexer c
 ) : BackgroundService {
     private readonly IDatabase _db = c.GetDatabase();
@@ -16,8 +14,7 @@ public class RedisIngestionWorker(
     protected override async Task ExecuteAsync(CancellationToken ct) {
         await Task.WhenAll([
             EmpaquetadorWorker(ct),
-            RedisSenderWorker(ct),
-            RedisSenderWorker(ct)
+            EmpaquetadorWorker(ct)
         ]);
     }
 
@@ -37,18 +34,10 @@ public class RedisIngestionWorker(
                     // Envia los datos a redis en otro hilo
                     var batchToSend = new RedisValue[count];
                     Array.Copy(buffer, batchToSend, count);
-                    await redis_writter.WriteAsync(batchToSend);
+                    await _db.ListLeftPushAsync("cola:examen", batchToSend, flags: CommandFlags.FireAndForget);
                     count = 0;
                 }
             }
         } catch (OperationCanceledException) { /* Manejo normal al cerrar */ }
-    }
-
-    private async Task RedisSenderWorker(CancellationToken ct) {
-        while (await redis_reader.WaitToReadAsync(ct)) {
-            while (redis_reader.TryRead(out var e)) {
-                await _db.ListLeftPushAsync("cola:examen", e);
-            }
-        }
     }
 }

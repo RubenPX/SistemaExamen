@@ -12,11 +12,4 @@ public static class ChannelManager {
         SingleReader = true,
         SingleWriter = true
     });
-
-    public static int MAX_REDIS_SIZE = 100;
-    public static readonly Channel<RedisValue[]> channelREDIS = Channel.CreateBounded<RedisValue[]>(new BoundedChannelOptions(MAX_REDIS_SIZE) {
-        FullMode = BoundedChannelFullMode.Wait,
-        SingleWriter = true,
-        SingleReader = false
-    });
 }
