@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Examenes.Server\Examenes.Server.csproj" />
     <ProjectReference Include="..\Examenes.Simulator\Examenes.Simulator.csproj" />
+    <ProjectReference Include="..\Migrator.RedisToOracle\Migrator.RedisToOracle.csproj" />
   </ItemGroup>
 
 </Project>

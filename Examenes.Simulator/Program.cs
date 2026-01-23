@@ -78,8 +78,8 @@ _ = Task.Run(async () => {
 // 3. Envío Agresivo de eventos
 sw = Stopwatch.StartNew();
 
-var tareasAtaque = alumnos.Select(async conn => {
-    var ev = new AccionEvento(Guid.NewGuid(), 1, 1, TipoAccion.MarcaPregunta, 1, "A", DateTime.UtcNow);
+var tareasAtaque = alumnos.Select(async (conn, idx) => {
+    var ev = new AccionEvento(idx, 1, TipoAccion.MarcaPregunta, 1, "A", DateTime.UtcNow);
 
     while (Interlocked.Read(ref accionesEnviadas) < eventosMaximos) {
         try {

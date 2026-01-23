@@ -1,8 +1,6 @@
-using System.Text.Json.Serialization;
 using System.Threading.Channels;
 using Examenes.Domain;
 using Examenes.Server.BackgroundServices;
-using Examenes.Server.Exporters;
 using Microsoft.AspNetCore.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,9 +19,6 @@ builder.Services.AddSingleton(ChannelManager.channelSIGANLR.Reader);
 builder.Services.AddHostedService<RedisIngestionWorker>();
 builder.Services.AddHostedService<ChannelMonitor>();
 
-// Worker que maneja Oracle
-builder.Services.AddSingleton<OracleExporterService>();
-
 var app = builder.Build();
 
 // --- 2. INICIALIZACIÓN ---
@@ -32,12 +27,6 @@ app.MapDefaultEndpoints();
 // --- 3. ENDPOINTS ---
 app.MapHub<ExamenHub>("/examenHub");
 
-// Endpoint de exportación con porcentaje
-app.MapGet("/api/finalizarexamen", async (OracleExporterService exporter) => {
-    await exporter.ExportarDeRedisAOracleAsync();
-    return Results.Ok("Proceso de exportación iniciado. Revisa la consola para ver el progreso.");
-});
-
 app.Run();
 
 // --- 4. CLASES DE LÓGICA ---
@@ -45,8 +34,3 @@ app.Run();
 public class ExamenHub(ChannelWriter<AccionEvento> rw) : Hub {
     public async Task RegistrarAccion(AccionEvento e) => await rw.WriteAsync(e);
 }
-
-// Serialización Optimizada (Source Generator)
-[JsonSourceGenerationOptions(WriteIndented = false)]
-[JsonSerializable(typeof(AccionEvento))]
-internal partial class SourceGenerationContext : JsonSerializerContext { }

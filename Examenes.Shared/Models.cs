@@ -1,4 +1,11 @@
+using System.Text.Json.Serialization;
+
 namespace Examenes.Domain;
+
+// Serialización Optimizada (Source Generator)
+[JsonSourceGenerationOptions(WriteIndented = false)]
+[JsonSerializable(typeof(AccionEvento))]
+public partial class SourceGenerationContext : JsonSerializerContext { }
 
 public enum TipoAccion : byte {
     CargaExamen = 1,
@@ -8,7 +15,6 @@ public enum TipoAccion : byte {
 
 // Usamos Record para inmutabilidad y facilidad de transporte
 public readonly record struct AccionEvento(
-    Guid EventoId,
     int AlumnoId,
     int ExamenId,
     TipoAccion Accion,

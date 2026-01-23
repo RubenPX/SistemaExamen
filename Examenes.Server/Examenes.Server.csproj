@@ -7,7 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Oracle.EntityFrameworkCore" Version="13.1.0" />
     <PackageReference Include="Aspire.StackExchange.Redis" Version="13.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
     <!--<PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.9" />-->
