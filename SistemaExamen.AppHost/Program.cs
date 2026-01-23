@@ -9,7 +9,7 @@ var oracle = builder.AddOracle("oracle")
 // Cache Redis
 var redis = builder.AddRedis("redis")
                 .WithDataVolume()
-                .WithPersistence(TimeSpan.FromSeconds(1))  // Activa RDB/AOF
+                .WithPersistence(TimeSpan.FromSeconds(10))  // Activa RDB/AOF
                 .WithLifetime(ContainerLifetime.Persistent);
 
 builder.AddContainer("redis-insight", "redislabs/redisinsight")

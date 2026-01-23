@@ -4,6 +4,7 @@ using Examenes.Domain;
 using Examenes.Server.BackgroundServices;
 using Examenes.Server.Exporters;
 using Microsoft.AspNetCore.SignalR;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,12 @@ app.MapHub<ExamenHub>("/examenHub");
 app.MapGet("/api/finalizarexamen", async (OracleExporterService exporter) => {
     await exporter.ExportarDeRedisAOracleAsync();
     return Results.Ok("Proceso de exportación iniciado. Revisa la consola para ver el progreso.");
+});
+
+app.MapGet("/count", async (IConnectionMultiplexer c) => {
+    IDatabase _db = c.GetDatabase();
+    int elements = (await _db.ListRangeAsync("cola:examen", 0)).Count();
+    return Results.Ok($"Hay en total {elements} elementos");
 });
 
 app.Run();

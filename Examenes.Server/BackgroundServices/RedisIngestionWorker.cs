@@ -22,7 +22,7 @@ public class RedisIngestionWorker(
     }
 
     private async Task EmpaquetadorWorker(CancellationToken ct) {
-        const int MaxBatchSize = 10_000; // Buffer para extraer de channel
+        const int MaxBatchSize = 100_000; // Buffer para extraer de channel
         var buffer = new RedisValue[MaxBatchSize];
         int count = 0;
 
@@ -37,7 +37,8 @@ public class RedisIngestionWorker(
                     // Envia los datos a redis en otro hilo
                     var batchToSend = new RedisValue[count];
                     Array.Copy(buffer, batchToSend, count);
-                    await redis_writter.WriteAsync(batchToSend);
+                    // await redis_writter.WriteAsync(batchToSend);
+                    await _db.ListLeftPushAsync("cola:examen", batchToSend);
                     count = 0;
                 }
             }
@@ -47,7 +48,7 @@ public class RedisIngestionWorker(
     private async Task RedisSenderWorker(CancellationToken ct) {
         while (await redis_reader.WaitToReadAsync(ct)) {
             while (redis_reader.TryRead(out var e)) {
-                await _db.ListLeftPushAsync("cola:examen", e);
+                
             }
         }
     }
