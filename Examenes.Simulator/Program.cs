@@ -80,7 +80,7 @@ var tareasAtaque = alumnos.Select(async conn => {
         try {
             await conn.SendAsync("RegistrarAccion", ev);
             Interlocked.Increment(ref accionesEnviadas);
-            if (accionesEnviadas % 100 == 0) await Task.Delay(1);
+            if (accionesEnviadas % 5 == 0) await Task.Delay(1);
         } catch {
             Interlocked.Increment(ref errores);
             break;
