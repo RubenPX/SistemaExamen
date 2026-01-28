@@ -1,5 +1,5 @@
 # Untradex - Concepto EDA por fases
-[Documentación provisional con IA](./Readme%20with%20IA.md)
+[Documentación provisional con IA (Notebook LLM)](./Readme%20with%20IA.md)
 
 El proyecto "Untradex" es un sistema diseñado para gestionar grandes volúmenes de solicitudes y acciones en tiempo real en entornos de elevada concurrencia, específicamente en un sistema de evaluación para alumnos.
 
