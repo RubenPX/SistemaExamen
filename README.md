@@ -49,7 +49,7 @@ Este sistema divide las tareas en pasos bien definidos, garantizando que cada co
 ## Principales Componentes de Código
 
 1. **Monitor de Canales:**
-   - Archivo: [`ChannelMonitor.cs`](./Examenes.Server/Monitoring/ChannelMonitorWorker.cs)
+   - Archivo: [`ChannelMonitor.cs`](./Examenes.Server/Monitoring/ChannelMonitor.cs)
    - Propósito: Monitorear el uso del canal de eventos en memoria y prevenir sobrecargas utilizando Backpressure.
 
 2. **Servicio OracleExporter:**
