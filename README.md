@@ -70,7 +70,7 @@ Este sistema divide las tareas en pasos bien definidos, garantizando que cada co
 ## Tecnologías Usadas
 
 1. **SignalR:** Gestiona la comunicación en tiempo real entre los alumnos y el sistema.
-2. **.NET 8:** El framework base del sistema, junto con .NET Aspire para capacidades adicionales como escalabilidad, resiliencia y mínimo consumo de recursos.
+2. **.NET 10:** El framework base del sistema, junto con .NET Aspire para capacidades adicionales como escalabilidad, resiliencia y mínimo consumo de recursos.
 3. **Redis:** Base de datos NoSQL para ingesta rápida y con persistencia en AOF.
 4. **Oracle:** Base de datos transaccional para almacenamiento final y consultas.
 5. **OpenTelemetry:** Monitorización centralizada, métricas y diágnosticos para la arquitectura.
