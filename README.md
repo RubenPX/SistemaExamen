@@ -53,7 +53,7 @@ Este sistema divide las tareas en pasos bien definidos, garantizando que cada co
    - Propósito: Monitorear el uso del canal de eventos en memoria y prevenir sobrecargas utilizando Backpressure.
 
 2. **Servicio OracleExporter:**
-   - Archivo: [`OracleExporterService.cs`](./Examenes.Server/Exporters/OracleExporterService.cs)
+   - Archivo: [`RedisToOracleWorker.cs`](./Migrator.RedisToOracle/Workers/RedisToOracleWorker.cs)
    - Función:
      - Conectar a la base de datos Oracle con múltiples intentos automáticos.
      - Crear la tabla requerida en Oracle si no está configurada.
