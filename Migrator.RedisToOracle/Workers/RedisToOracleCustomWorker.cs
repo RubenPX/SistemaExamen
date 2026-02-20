@@ -13,7 +13,7 @@ using StackExchange.Redis;
 namespace Migrator.RedisToOracle.Workers;
 
 internal class RedisToOracleCustomWorker(IConnectionMultiplexer redis, ExamenDBContext context, IHostApplicationLifetime lifetime) : BackgroundService {
-    private const int BatchSize = 1000;
+    private const int BatchSize = 5000;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
         lifetime.ApplicationStopping.Register(() => {
@@ -75,6 +75,7 @@ internal class RedisToOracleCustomWorker(IConnectionMultiplexer redis, ExamenDBC
                 double porcentaje = (double)itemsProcesados / itemsTotales * 100;
                 sw.Stop();
                 Console.WriteLine($"[Oracle Exporter] {porcentaje:F2}% | {itemsProcesados}/{itemsTotales} registros (enviado {lote.Length} registros en {sw.Elapsed.TotalMilliseconds:F2})");
+                await Task.Delay(500); // Obligatoriamente hay que añadir un delay para que no se sature oracle
             } catch (Exception ex) {
                 Console.WriteLine($"[Oracle Exporter][ERROR] fallo al procesar items. Devolviendo a redis... | {ex.Message}");
                 await db.ListLeftPushAsync("cola:examen", items);
@@ -105,10 +106,9 @@ internal class RedisToOracleCustomWorker(IConnectionMultiplexer redis, ExamenDBC
             dt.Rows.Add(e.EventoId, e.AlumnoId, e.ExamenId, e.AccionId, e.PreguntaId, e.Valor, e.Timestamp);
 
         // Configuración de BulkCopy optimizada
-        using var bulk = new OracleBulkCopy(conn, OracleBulkCopyOptions.Default) {
+        using var bulk = new OracleBulkCopy(conn, OracleBulkCopyOptions.UseInternalTransaction) {
             DestinationTableName = "FREEPDB1",
-            BulkCopyTimeout = 300,
-            BatchSize = 10000 // Coincide con el tamaño de nuestro buffer
+            BatchSize = BatchSize
         };
         await Task.Run(() => bulk.WriteToServer(dt));
     }
