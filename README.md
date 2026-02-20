@@ -1,5 +1,5 @@
 # Untradex - Concepto EDA por fases
-[Documentación provisional con IA](./Readme%20with%20IA.md)
+[Documentación provisional con IA (Notebook LLM)](./Readme%20with%20IA.md)
 
 El proyecto "Untradex" es un sistema diseñado para gestionar grandes volúmenes de solicitudes y acciones en tiempo real en entornos de elevada concurrencia, específicamente en un sistema de evaluación para alumnos.
 
@@ -49,11 +49,11 @@ Este sistema divide las tareas en pasos bien definidos, garantizando que cada co
 ## Principales Componentes de Código
 
 1. **Monitor de Canales:**
-   - Archivo: [`ChannelMonitorWorker.cs`](./Examenes.Server/Monitoring/ChannelMonitorWorker.cs)
+   - Archivo: [`ChannelMonitor.cs`](./Examenes.Server/BackgroundServices/ChannelMonitor.cs)
    - Propósito: Monitorear el uso del canal de eventos en memoria y prevenir sobrecargas utilizando Backpressure.
 
 2. **Servicio OracleExporter:**
-   - Archivo: [`OracleExporterService.cs`](./Examenes.Server/Exporters/OracleExporterService.cs)
+   - Archivo: [`RedisToOracleWorker.cs`](./Migrator.RedisToOracle/Workers/RedisToOracleWorker.cs)
    - Función:
      - Conectar a la base de datos Oracle con múltiples intentos automáticos.
      - Crear la tabla requerida en Oracle si no está configurada.
@@ -70,7 +70,7 @@ Este sistema divide las tareas en pasos bien definidos, garantizando que cada co
 ## Tecnologías Usadas
 
 1. **SignalR:** Gestiona la comunicación en tiempo real entre los alumnos y el sistema.
-2. **.NET 8:** El framework base del sistema, junto con .NET Aspire para capacidades adicionales como escalabilidad, resiliencia y mínimo consumo de recursos.
+2. **.NET 10:** El framework base del sistema, junto con .NET Aspire para capacidades adicionales como escalabilidad, resiliencia y mínimo consumo de recursos.
 3. **Redis:** Base de datos NoSQL para ingesta rápida y con persistencia en AOF.
 4. **Oracle:** Base de datos transaccional para almacenamiento final y consultas.
 5. **OpenTelemetry:** Monitorización centralizada, métricas y diágnosticos para la arquitectura.
