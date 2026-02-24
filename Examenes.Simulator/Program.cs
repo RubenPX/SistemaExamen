@@ -69,7 +69,7 @@ if (int.TryParse(Environment.GetEnvironmentVariable("MAX_EVENTS")?.Replace("_", 
 _ = Task.Run(async () => {
     while (true) {
         long antes = Interlocked.Read(ref accionesEnviadas);
-        await Task.Delay(1000);
+        await Task.Delay(500);
         long ahora = Interlocked.Read(ref accionesEnviadas);
         Console.WriteLine($"[STRESS] {(ahora - antes) * 2:N0} req/s | Total: {ahora} | Errores: {Interlocked.Read(ref errores)}");
     }
