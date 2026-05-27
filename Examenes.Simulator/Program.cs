@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Threading.RateLimiting;
 using Examenes.Domain;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -69,23 +70,40 @@ if (int.TryParse(Environment.GetEnvironmentVariable("MAX_EVENTS")?.Replace("_", 
 _ = Task.Run(async () => {
     while (true) {
         long antes = Interlocked.Read(ref accionesEnviadas);
-        await Task.Delay(1000);
+        await Task.Delay(500);
         long ahora = Interlocked.Read(ref accionesEnviadas);
-        Console.WriteLine($"[STRESS] {(ahora - antes) * 2:N0} req/s | Total: {ahora} | Errores: {Interlocked.Read(ref errores)}");
+        Console.WriteLine($"[STRESS] {(ahora - antes)*2:N0} req/s | Total: {ahora} | Errores: {Interlocked.Read(ref errores)}");
     }
 });
 
 // 3. Envío Agresivo de eventos
 sw = Stopwatch.StartNew();
 
+int rps = 500_000;
+
+var options = new TokenBucketRateLimiterOptions {
+    TokenLimit = rps / 10,
+    TokensPerPeriod = rps / 10,
+    ReplenishmentPeriod = TimeSpan.FromMilliseconds(100), // 10 veces por segundo
+    QueueLimit = 0,
+    AutoReplenishment = true
+};
+
+var limiter = new TokenBucketRateLimiter(options);
+
 var tareasAtaque = alumnos.Select(async (conn, idx) => {
     var ev = new AccionEvento(idx, 1, TipoAccion.MarcaPregunta, 1, "A", DateTime.UtcNow);
 
     while (Interlocked.Read(ref accionesEnviadas) < eventosMaximos) {
+        using var lease = await limiter.AcquireAsync(1);
+        if (!lease.IsAcquired) {
+            await Task.Delay(1);
+            continue;
+        }
+
         try {
             await conn.SendAsync("RegistrarAccion", ev);
             Interlocked.Increment(ref accionesEnviadas);
-            if (accionesEnviadas % agresividad == 0) await Task.Delay(1);
         } catch {
             Interlocked.Increment(ref errores);
             break;

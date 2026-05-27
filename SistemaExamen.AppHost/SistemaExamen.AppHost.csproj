@@ -18,12 +18,14 @@
    
 	  <PackageReference Include="Aspire.Hosting.Oracle" Version="13.1.0" />
 	  <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.0" />
+	  <PackageReference Include="CommunityToolkit.Aspire.Hosting.SurrealDb" Version="13.1.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Examenes.Server\Examenes.Server.csproj" />
     <ProjectReference Include="..\Examenes.Simulator\Examenes.Simulator.csproj" />
     <ProjectReference Include="..\Migrator.RedisToOracle\Migrator.RedisToOracle.csproj" />
+    <ProjectReference Include="..\Migrator.RedisToSurrealDB\Migrator.RedisToSurrealDB.csproj" />
   </ItemGroup>
 
 </Project>
